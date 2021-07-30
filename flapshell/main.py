@@ -9,14 +9,14 @@ from .block import Block
 
 def iterator(code):
 
-    start_blk = {"":"", "{":"}","(":")"}
+    start_blk = {"":"", "{":"}","(":")", "[":"]"}
 
     stmt = ""
     comment_or_string = False
     blocks = []
     blk = Block()
     current_blk = blk
-    blk_type = [""]
+    blk_type = []
     blocks.append(blk)
     for i in range(len(code)):
         stmt = stmt+code[i]
@@ -29,15 +29,29 @@ def iterator(code):
                 if (code[i-1] == "\\"):
                     pass
                 else:
-                    #blk_type.pop(-1)
-                    #blk_type.pop(-1)
                     comment_or_string = False
         if (comment_or_string):
             pass
-        elif( code[i] == ';'):
+            """" elif( code[i] == ';'):
             print("Statement ", "    "+stmt)
             blocks[-1].text = blocks[-1].text+ stmt
-            stmt = ""
+            stmt = "" """
+        elif (code[i] == "#"):
+            if(code[i+1:].find("include") == 0):
+
+                print("include found")
+                line = code[i:].find(">")
+                stmt = stmt+code[i+1:line]
+                print("include: --- ", stmt)
+
+                blocks[-1].text = blocks[-1].text + stmt
+                stmt = ""
+                i = line
+
+            elif(code[i+1:].find("define") == 0):
+                print("define macro found")
+            elif(code[i+1:].find("ifndef") == 0):
+                print("ifdef found")
 
         elif code[i] in start_blk:
             blk_type.append( code[i])
@@ -45,9 +59,11 @@ def iterator(code):
             #print("comment_or_string: ", comment_or_string)
             blocks.append(Block())
 
-        elif (start_blk[blk_type[-1]] == code[i]):
+        elif(blk_type)and  (start_blk[blk_type[-1]] == code[i]):
             #while code[i]:
             blk_type.pop(-1)
+            blocks[-1].text = blocks[-1].text + stmt
+            stmt = ""
             print("blk-----", blk_type)
 
     print(len(blocks), blocks)
@@ -84,7 +100,7 @@ def fix_includes(code):
 
     includes = re.findall(fix_includes, code)
     for i in includes:
-        code = re.sub(fr'#include["<]?([^">]{i})[">]?', fr'#include<{i}>;', code)
+        code = re.sub(fr'#include["<]?([^">]{i})[">]?', fr'#include<{i}>', code)
         code = re.sub(fr'#include"{i}"', fr"#include<{i}>", code)
 
     return code
@@ -104,7 +120,7 @@ def parse_c(code):
     code = fix_includes(code+";")
     code = fix_strings(code)
     code = remove_comments(code)
-    print(code)
+    # print(code)
     iterator(code)
 
 
