@@ -13,3 +13,13 @@ class Block:
         self.functions = {}
         self.scopes = []
         self.text = ""
+
+    def __repr__(self):
+        return self.text
+    def __str__(self):
+        return self.text
+
+    def parse(self, code, loc):
+        print(code[loc])
+        blk_type = code[loc]
+

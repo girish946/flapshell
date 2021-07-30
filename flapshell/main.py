@@ -4,13 +4,74 @@ import os
 import sys
 import argparse
 import re
+from .block import Block
+
+
+def iterator(code):
+
+    start_blk = {"":"", "{":"}","(":")"}
+
+    stmt = ""
+    comment_or_string = False
+    blocks = []
+    blk = Block()
+    current_blk = blk
+    blk_type = [""]
+    blocks.append(blk)
+    for i in range(len(code)):
+        stmt = stmt+code[i]
+
+        if (code[i] == '"' or code[i] == "'"):
+            #print("stmt: ", stmt)
+            if (not comment_or_string):
+                comment_or_string = True
+            else:
+                if (code[i-1] == "\\"):
+                    pass
+                else:
+                    #blk_type.pop(-1)
+                    #blk_type.pop(-1)
+                    comment_or_string = False
+        if (comment_or_string):
+            pass
+        elif( code[i] == ';'):
+            print("Statement ", "    "+stmt)
+            blocks[-1].text = blocks[-1].text+ stmt
+            stmt = ""
+
+        elif code[i] in start_blk:
+            blk_type.append( code[i])
+            print("blk_type:",blk_type)
+            #print("comment_or_string: ", comment_or_string)
+            blocks.append(Block())
+
+        elif (start_blk[blk_type[-1]] == code[i]):
+            #while code[i]:
+            blk_type.pop(-1)
+            print("blk-----", blk_type)
+
+    print(len(blocks), blocks)
+    for i in blocks:
+        if i.text:
+            print("---", i)
+
+def fix_strings(code):
+
+    code = re.sub(r"\\\"", "  ", code)
+    code = re.sub(r"\\\'", "  ", code)
+    strings = re.findall(r'".*?"',  code)
+
+    for i in strings:
+        code = code.replace(i, '"'+(" "*(len(i)-2))+'"')
+    #print(code)
+    return code
 
 
 def remove_comments(code):
     sep='\n'
     code = code.replace('\n', " \n")
-    code = re.sub(r"\/\/[^\n\r]+?(?:\*\)|[\n\r])", ";", code)
     code = re.sub(r'/\*.*?\*/', r'', code, flags=re.MULTILINE | re.DOTALL)
+    code = re.sub(r"\/\/[^\n\r]+?(?:\*\)|[\n\r])", " ", code)
     code = re.sub(r'\\\n', r' ', code, flags=re.MULTILINE | re.DOTALL)
 
     return code
@@ -20,9 +81,10 @@ def fix_includes(code):
 
     fix_includes = re.compile(r'#include["<]?([^">]+)[">]?')
     includes = re.findall(fix_includes, code)
-    print(includes)
     for i in includes:
         code = re.sub(fr'#include["<]?([^">]{i})[">]?', fr'#include<{i}>;', code)
+        code = re.sub(fr'#include"{i}"', fr"#include<{i}>", code)
+
     return code
 
 
@@ -36,14 +98,14 @@ def parse_c(code):
     5. define scopes
     """
     print(type(code))
-    #code = re.sub(r'#\s+', '#', code)
-    code = fix_includes(code)
+    code = re.sub(r'#\s+', '#', code)
+    code = fix_includes(code+";")
+    code = fix_strings(code)
     code = remove_comments(code)
-
     print(code)
+    #iterator(code)
 
 
 def read_code(file_name):
     return open(file_name).read()
-
 
