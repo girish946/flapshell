@@ -53,7 +53,8 @@ def iterator(code):
     print(len(blocks), blocks)
     for i in blocks:
         if i.text:
-            print("---", i)
+            print("start: ---", i)
+            print("end: ---")
 
 def fix_strings(code):
 
@@ -77,9 +78,10 @@ def remove_comments(code):
     return code
 
 def fix_includes(code):
-    code = re.sub(r'#\s*include\s*', '#include', code)
 
+    code = re.sub(r'#\s*include\s*', '#include', code)
     fix_includes = re.compile(r'#include["<]?([^">]+)[">]?')
+
     includes = re.findall(fix_includes, code)
     for i in includes:
         code = re.sub(fr'#include["<]?([^">]{i})[">]?', fr'#include<{i}>;', code)
@@ -103,7 +105,7 @@ def parse_c(code):
     code = fix_strings(code)
     code = remove_comments(code)
     print(code)
-    #iterator(code)
+    iterator(code)
 
 
 def read_code(file_name):
