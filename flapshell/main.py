@@ -9,7 +9,7 @@ from .block import Block
 
 def iterator(code):
 
-    start_blk = {"":"", "{":"}","(":")", "[":"]"}
+    start_blk = { "{":"}","(":")", "[":"]"}
 
     stmt = ""
     comment_or_string = False
